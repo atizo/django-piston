@@ -87,8 +87,10 @@ class HttpStatusCode(Exception):
 def validate(v_form, operation='POST'):
     @decorator
     def wrap(f, self, request, *a, **kwa):
-        form = v_form(getattr(request, operation))
-
+        if operation == 'POST' and request.content_type == 'application/json':
+            form = v_form(request.data)
+        else:
+            form = v_form(getattr(request, operation))
         if form.is_valid():
             setattr(request, 'form', form)
             return f(self, request, *a, **kwa)
@@ -226,7 +228,7 @@ class Mimer(object):
         """
         type_formencoded = "application/x-www-form-urlencoded"
 
-        ctype = self.request.META.get('CONTENT_TYPE', type_formencoded)
+        ctype = self.request.META.get('CONTENT_TYPE', type_formencoded).split(";")[0]
 
         if type_formencoded in ctype:
             return None
