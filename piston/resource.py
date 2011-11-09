@@ -70,14 +70,24 @@ class Resource(object):
 
         return request.GET.get('format', 'json')
 
-    def form_validation_response(self, e):
+    def form_validation_response(self, request, e, em_format):
         """
         Method to return form validation error information.
         You will probably want to override this in your own
         `Resource` subclass.
         """
-        resp = rc.BAD_REQUEST
-        resp.write(' '+str(e.form.errors))
+        try:
+            emitter, ct = piston.emitters.Emitter.get(em_format)
+            fields = self.handler.fields
+        except ValueError:
+            result = piston.utils.rc.BAD_REQUEST
+            result.content = "Invalid output format specified '%s'." % em_format
+            return result
+        serialized_errors = dict((key, [unicode(v) for v in values])
+                                for key,values in e.form.errors.items())
+        srl = emitter(serialized_errors, piston.handler.typemapper, self.handler, fields, False)
+        stream = srl.render(request)
+        resp = HttpResponse(stream, mimetype=ct, status=400)
         return resp
 
     @property
@@ -256,7 +266,7 @@ class Resource(object):
         needs
         """
         if isinstance(e, FormValidationError):
-            return self.form_validation_response(e)
+            return self.form_validation_response(request, e, em_format)
 
         elif isinstance(e, TypeError):
             result = rc.BAD_REQUEST
