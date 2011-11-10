@@ -77,15 +77,18 @@ class Resource(object):
         `Resource` subclass.
         """
         try:
-            emitter, ct = piston.emitters.Emitter.get(em_format)
+            emitter, ct = Emitter.get(em_format)
             fields = self.handler.fields
         except ValueError:
-            result = piston.utils.rc.BAD_REQUEST
+            result = rc.BAD_REQUEST
             result.content = "Invalid output format specified '%s'." % em_format
             return result
-        serialized_errors = dict((key, [unicode(v) for v in values])
-                                for key,values in e.form.errors.items())
-        srl = emitter(serialized_errors, piston.handler.typemapper, self.handler, fields, False)
+
+        serialized_errors = dict(
+            (key, [unicode(v) for v in values])
+            for key,values in e.form.errors.items()
+        )
+        srl = emitter(serialized_errors, typemapper, self.handler, fields, False)
         stream = srl.render(request)
         resp = HttpResponse(stream, mimetype=ct, status=400)
         return resp
