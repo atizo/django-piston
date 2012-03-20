@@ -43,6 +43,10 @@ try:
 except ImportError:
     import pickle
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Allow people to change the reverser (default `permalink`).
 reverser = permalink
 
@@ -152,7 +156,10 @@ class Emitter(object):
             `exclude` on the handler (see `typemapper`.)
             """
             ret = { }
-            handler = self.in_typemapper(type(data), self.anonymous)
+            #handler = self.in_typemapper(type(data), self.anonymous)
+            handler = self.handler # workaround: don't get handler via typemapper
+            if not handler or not fields:
+                logger.error('Emitter constructed without handler or without fields')
             get_absolute_uri = False
 
             if handler or fields:
