@@ -262,15 +262,15 @@ class Emitter(object):
                     ret[k] = _any(getattr(data, k))
 
             # resouce uri
-            if self.in_typemapper(type(data), self.anonymous):
-                handler = self.in_typemapper(type(data), self.anonymous)
-                if hasattr(handler, 'resource_uri'):
-                    url_id, fields = handler.resource_uri(data)
+            #if self.in_typemapper(type(data), self.anonymous):
+            #    handler = self.in_typemapper(type(data), self.anonymous)
+            if hasattr(handler, 'resource_uri'):
+                url_id, fields = handler.resource_uri(data)
 
-                    try:
-                        ret['resource_uri'] = reverser( lambda: (url_id, fields) )()
-                    except NoReverseMatch, e:
-                        pass
+                try:
+                    ret['resource_uri'] = reverser( lambda: (url_id, fields) )()
+                except NoReverseMatch, e:
+                    pass
 
             if hasattr(data, 'get_api_url') and 'resource_uri' not in ret:
                 try: ret['resource_uri'] = data.get_api_url()
@@ -307,7 +307,8 @@ class Emitter(object):
     def in_typemapper(self, model, anonymous):
         for klass, (km, is_anon) in self.typemapper.iteritems():
             if model is km and is_anon is anonymous:
-                return klass
+                #return klass
+                raise Exception('Typemapper used, if multiple handlers with the same model exist, this causes problems')
 
     def render(self):
         """
