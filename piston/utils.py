@@ -1,6 +1,7 @@
 import re
 
 import time
+import django
 from django.http import HttpResponseNotAllowed, HttpResponseForbidden, HttpResponse, HttpResponseBadRequest
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
@@ -256,7 +257,11 @@ class Mimer(object):
 
             if loadee:
                 try:
-                    self.request.data = loadee(self.request.raw_post_data)
+                    if django.VERSION < (1, 4):
+                        raw_data = self.request.raw_post_data
+                    else:
+                        raw_data = self.request.body
+                    self.request.data = loadee(raw_data)
 
                     # Reset both POST and PUT from request, as its
                     # misleading having their presence around.
